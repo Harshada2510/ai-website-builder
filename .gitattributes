@@ -1,0 +1,10 @@
+* text=auto
+
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker/nginx/*.template text eol=lf
+docker/php/*.ini text eol=lf
+docker/php-fpm/*.conf text eol=lf
+docker/*.conf text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
