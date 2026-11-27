@@ -3,6 +3,22 @@ set -eu
 
 export PORT="${PORT:-8080}"
 
+# TiDB/MySQL TLS CA certificate (public CA only; never log certificate contents)
+TIDB_CA_TARGET="/etc/ssl/certs/tidb-ca.pem"
+TIDB_CA_SOURCE="${TIDB_CA_SECRET_FILE:-/etc/secrets/tidb-ca.pem}"
+if [ ! -f "$TIDB_CA_TARGET" ] && [ -f "$TIDB_CA_SOURCE" ]; then
+  echo "==> Installing TiDB CA certificate from secret file"
+  cp "$TIDB_CA_SOURCE" "$TIDB_CA_TARGET"
+  chmod 0644 "$TIDB_CA_TARGET" || true
+fi
+if [ -f "$TIDB_CA_TARGET" ] && [ -z "${MYSQL_ATTR_SSL_CA:-}" ]; then
+  export MYSQL_ATTR_SSL_CA="$TIDB_CA_TARGET"
+  echo "==> MYSQL_ATTR_SSL_CA configured from mounted CA certificate"
+fi
+if [ -n "${MYSQL_ATTR_SSL_CA:-}" ] && [ ! -f "${MYSQL_ATTR_SSL_CA}" ]; then
+  echo "WARNING: MYSQL_ATTR_SSL_CA is set but the certificate file was not found. Database TLS connection may fail."
+fi
+
 echo "==> Rendering nginx config for PORT=${PORT}"
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
 

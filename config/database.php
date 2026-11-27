@@ -59,9 +59,27 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'options' => extension_loaded('pdo_mysql') ? (function () {
+                $sslCa = env('MYSQL_ATTR_SSL_CA');
+                $options = array_filter([
+                    Mysql::ATTR_SSL_CA => $sslCa,
+                ], static fn ($value) => $value !== null && $value !== '');
+
+                if ($sslCa) {
+                    $verifyServerCert = null;
+                    if (defined(Pdo\Mysql::class.'::ATTR_SSL_VERIFY_SERVER_CERT')) {
+                        $verifyServerCert = Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT;
+                    } elseif (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+                        $verifyServerCert = PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+                    }
+
+                    if ($verifyServerCert !== null) {
+                        $options[$verifyServerCert] = true;
+                    }
+                }
+
+                return $options;
+            })() : [],
         ],
 
         'mariadb' => [
@@ -79,9 +97,27 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'options' => extension_loaded('pdo_mysql') ? (function () {
+                $sslCa = env('MYSQL_ATTR_SSL_CA');
+                $options = array_filter([
+                    Mysql::ATTR_SSL_CA => $sslCa,
+                ], static fn ($value) => $value !== null && $value !== '');
+
+                if ($sslCa) {
+                    $verifyServerCert = null;
+                    if (defined(Pdo\Mysql::class.'::ATTR_SSL_VERIFY_SERVER_CERT')) {
+                        $verifyServerCert = Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT;
+                    } elseif (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+                        $verifyServerCert = PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+                    }
+
+                    if ($verifyServerCert !== null) {
+                        $options[$verifyServerCert] = true;
+                    }
+                }
+
+                return $options;
+            })() : [],
         ],
 
         'pgsql' => [
