@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 export PORT="${PORT:-8080}"
 

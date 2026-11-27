@@ -1,4 +1,4 @@
-﻿# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
 # ---------- Frontend build ----------
 FROM node:20-bookworm-slim AS frontend
