@@ -10,8 +10,6 @@ use App\Http\Controllers\WebsiteEditorController;
 use App\Http\Controllers\WebsiteGenerationController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', \App\Http\Controllers\HealthController::class)->name('health');
-
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::redirect('/dashboard', '/', 301);
 

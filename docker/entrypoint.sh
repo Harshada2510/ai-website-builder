@@ -40,6 +40,9 @@ chmod -R ug+rwX storage bootstrap/cache || true
 # Public storage symlink (safe if unused).
 php artisan storage:link --force --no-interaction >/dev/null 2>&1 || true
 
+# Safe startup diagnostics (no secrets, no credential values)
+echo "==> Startup diagnostics: APP_ENV=${APP_ENV:-unset} APP_DEBUG=${APP_DEBUG:-unset} APP_KEY_SET=$([ -n "${APP_KEY:-}" ] && echo yes || echo no) DB_CONNECTION=${DB_CONNECTION:-unset} DB_HOST_SET=$([ -n "${DB_HOST:-}" ] && echo yes || echo no) DB_DATABASE_SET=$([ -n "${DB_DATABASE:-}" ] && echo yes || echo no) MYSQL_ATTR_SSL_CA_SET=$([ -n "${MYSQL_ATTR_SSL_CA:-}" ] && echo yes || echo no) MYSQL_ATTR_SSL_CA_FILE=$([ -n "${MYSQL_ATTR_SSL_CA:-}" ] && [ -f "${MYSQL_ATTR_SSL_CA}" ] && echo present || echo missing-or-unset)"
+
 if [ -z "${APP_KEY:-}" ]; then
   echo "WARNING: APP_KEY is not set. Set APP_KEY in Render Environment before using the app."
 fi
@@ -52,6 +55,9 @@ if [ "${APP_ENV:-production}" = "production" ] && [ -n "${APP_KEY:-}" ]; then
   php artisan route:cache --no-interaction
   php artisan view:cache --no-interaction
   php artisan event:cache --no-interaction || true
+  # Cache commands run as root; ensure PHP-FPM (www-data) can read generated files.
+  chown -R www-data:www-data storage bootstrap/cache || true
+  chmod -R ug+rwX storage bootstrap/cache || true
 else
   echo "==> Skipping production cache (APP_ENV=${APP_ENV:-unset}, APP_KEY set=$([ -n "${APP_KEY:-}" ] && echo yes || echo no))"
 fi
@@ -63,6 +69,10 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
 else
   echo "==> Skipping migrations (set RUN_MIGRATIONS=true to enable explicitly)"
 fi
+
+# Final safety: ensure runtime-writable Laravel paths are accessible to PHP-FPM (www-data)
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R ug+rwX storage bootstrap/cache || true
 
 echo "==> Starting services"
 exec "$@"
